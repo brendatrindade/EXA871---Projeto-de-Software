@@ -1,3 +1,21 @@
-# Solitaire Python
+# Solitaire Python (Klondike)
 
-Requer Python 3.10+ com Tkinter. Execute `python main.py`; `python main.py --smoke` verifica distribuição, identidade do baralho, estratégia sem mutação, desfazer, reinício e serialização JSON com identidade das 52 cartas. Os botões Salvar/Abrir usam `solitaire-klondike-v1`. Arraste uma carta/sequência visível; o destino durante o arraste indica jogada válida em verde e inválida em vermelho.
+Requer Python 3.10+ com Tkinter.
+
+- `python main.py` abre o jogo.
+- `python main.py --smoke` roda os testes do modelo sem abrir janela (também: `python -m unittest discover -s tests`).
+
+## Estrutura (`klondike/`)
+
+| Módulo | Responsabilidade |
+|---|---|
+| `cards.py` | `Suit`, `Color`, `Rank` (ordem total), `Card` (identidade única), `Deck` |
+| `piles.py` | `Pile` comum; `Foundation` e `TableauColumn` sobrescrevem `can_take` (regras de empilhamento) |
+| `actions.py` | `Action` reversível: `DrawAction`, `MoveCardsAction`, `RevealAction`, `NewGameAction`, `CompositeAction`, `NullAction` |
+| `game.py` | Regras, consultas somente leitura, histórico/desfazer, notificação, execução (`perform`) |
+| `strategy.py` | `Strategy` (decide, sem alterar estado), `AutomaticStrategy` (prioridades RF29), `NullStrategy` |
+| `persistence.py` | JSON `solitaire-klondike-v1` (formato documentado no módulo) |
+| `geometry.py` | Coordenadas únicas para desenho, clique e arraste |
+| `ui.py` | Tkinter; só consulta `Game.can_move` |
+
+Uso: arraste cartas/sequências (a sequência acompanha o mouse e o destino fica verde/vermelho); clique no monte para comprar; monte vazio inicia nova partida; "Estratégia ativa" liga/desliga o jogo automático.

@@ -1,0 +1,3 @@
+# JetUML Python sketch editor
+
+Requer Python 3.10+ e Tkinter. Execute `python main.py`; `python main.py --smoke` verifica o modelo sem abrir janela. Crie elementos pela barra lateral; escolha uma aresta e clique em dois nós; use Ctrl+clique para seleção múltipla. `Ctrl+X/C/V` recorta, copia e cola nós e arestas selecionados dentro do editor; `Ctrl+A` seleciona todos. `Ctrl+Z/Y` desfaz/refaz. `Ctrl+S/O` salva/abre JSON próprio (`jetuml-sketch-v1`). View oferece zoom. SVG é exportado sem dependências; PNG/JPEG e “Copy Diagram to Clipboard” requerem Pillow. A cópia da imagem para o clipboard está disponível nesta versão no Windows. A implementação continua parcial frente à matriz de requisitos.

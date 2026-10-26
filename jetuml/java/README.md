@@ -1,0 +1,3 @@
+# JetUML Java sketch editor
+
+Requer JDK 17+. Execute `javac Main.java` e depois `java Main`; use `java Main --smoke` para verificar as cinco famílias, ida e volta JSON com caracteres especiais e rejeição de JSON malformado sem abrir a janela. O editor Swing oferece criação/ligação, histórico, JSON próprio, exportação PNG/JPEG, cópia da imagem do diagrama para o clipboard do sistema (File > Copy Diagram to Clipboard ou ferramenta “To Clipboard”), zoom, Ctrl+clique para seleção múltipla e Cut/Copy/Paste interno (`Ctrl+X/C/V`). O formato salvo continua não compatível com JetUML, e o escopo permanece parcial frente à matriz.

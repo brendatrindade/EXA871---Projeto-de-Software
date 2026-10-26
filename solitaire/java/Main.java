@@ -1,54 +1,19 @@
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.util.List;
-import java.io.*;
-import java.nio.file.*;
+import java.util.Random;
+import javax.swing.SwingUtilities;
+import klondike.game.Game;
+import klondike.smoke.SmokeTests;
+import klondike.strategy.AutomaticStrategy;
+import klondike.ui.SolitaireWindow;
 
-/** Klondike Solitaire. Model rules are independent of Swing rendering. */
-public class Main {
-  enum Suit { HEARTS("♥",true), DIAMONDS("♦",true), CLUBS("♣",false), SPADES("♠",false);
-    final String symbol; final boolean red; Suit(String s,boolean r){symbol=s;red=r;} }
-  record Card(Suit suit,int rank) implements Serializable { public String toString(){return new String[]{"A","2","3","4","5","6","7","8","9","10","J","Q","K"}[rank-1]+suit.symbol;} }
-  static class Pile implements Serializable { final ArrayList<Card> cards=new ArrayList<>(); boolean empty(){return cards.isEmpty();} Card top(){return empty()?null:cards.get(cards.size()-1);} void push(Card c){cards.add(c);} Card pop(){return cards.remove(cards.size()-1);} }
-  static class Column extends Pile { int visibleFrom; boolean visible(int i){return i>=visibleFrom;} List<Card> sequence(int i){return new ArrayList<>(cards.subList(i,cards.size()));} boolean accepts(List<Card> moving){if(moving.isEmpty())return false; Card c=moving.get(0); return empty()?c.rank==13:c.rank==top().rank-1 && c.suit.red!=top().suit.red;} }
-  record Snapshot(List<List<Card>> columns,List<Integer> visible,List<Card> stock,List<Card> waste,Map<Suit,List<Card>> foundations){}
-  record Location(Pile pile,int index,List<Card> sequence){}
-  record Suggestion(String kind,Card card,Column destination,boolean foundation){}
-  static class AutomaticStrategy {
-    Suggestion decide(Game g){if(!g.stock.empty()&&g.waste.empty())return new Suggestion("draw",null,null,false);Card w=g.waste.top();if(w!=null&&g.canFound(w))return new Suggestion("move",w,null,true);if(w!=null)for(Column c:g.columns)if(g.canMove(w,c))return new Suggestion("move",w,c,false);for(Column c:g.columns)if(c.top()!=null&&g.canFound(c.top()))return new Suggestion("move",c.top(),null,true);for(Column from:g.columns)for(int i=from.visibleFrom;i<from.cards.size();i++){Card card=from.cards.get(i);List<Card>seq=from.sequence(i);if(i==0&&card.rank==13)continue;for(Column to:g.columns)if(to!=from&&to.accepts(seq)&&((from.visibleFrom>0&&i==from.visibleFrom)||i==0))return new Suggestion("move",card,to,false);}if(!g.stock.empty())return new Suggestion("draw",null,null,false);return new Suggestion("noop",null,null,false);}
+/** Ponto de entrada: {@code java Main} abre o jogo; {@code java Main --smoke} roda os testes sem janela. */
+public final class Main {
+  private Main() { }
+
+  public static void main(String[] args) {
+    if (args.length > 0 && args[0].equals("--smoke")) {
+      System.exit(SmokeTests.run());
+    }
+    SwingUtilities.invokeLater(() ->
+        new SolitaireWindow(new Game(new Random(), new AutomaticStrategy())).setVisible(true));
   }
-  static class Game {
-    final Random random=new Random(); final List<Column> columns=new ArrayList<>(); final EnumMap<Suit,Pile> foundations=new EnumMap<>(Suit.class); final Pile stock=new Pile(),waste=new Pile(); final Deque<Snapshot> undo=new ArrayDeque<>(); final List<Runnable> listeners=new ArrayList<>(); AutomaticStrategy strategy=new AutomaticStrategy();
-    Game(){for(Suit s:Suit.values())foundations.put(s,new Pile());newGame();}
-    void subscribe(Runnable r){listeners.add(r);} void notifyChange(){for(Runnable r:listeners)r.run();}
-    void newGame(){columns.clear();for(int i=0;i<7;i++)columns.add(new Column());for(Pile p:foundations.values())p.cards.clear();stock.cards.clear();waste.cards.clear();undo.clear();ArrayList<Card>d=new ArrayList<>();for(Suit s:Suit.values())for(int r=1;r<=13;r++)d.add(new Card(s,r));Collections.shuffle(d,random);for(int i=0;i<7;i++){Column c=columns.get(i);for(int j=0;j<=i;j++)c.push(d.remove(d.size()-1));c.visibleFrom=i;}for(Card c:d)stock.push(c);notifyChange();}
-    int score(){return foundations.values().stream().mapToInt(p->p.cards.size()).sum();} boolean won(){return score()==52;}
-    Snapshot snapshot(){List<List<Card>>cs=new ArrayList<>();List<Integer>vs=new ArrayList<>();for(Column p:columns){cs.add(new ArrayList<>(p.cards));vs.add(p.visibleFrom);}EnumMap<Suit,List<Card>>fs=new EnumMap<>(Suit.class);foundations.forEach((s,p)->fs.put(s,new ArrayList<>(p.cards)));return new Snapshot(cs,vs,new ArrayList<>(stock.cards),new ArrayList<>(waste.cards),fs);}
-    void saveTo(Path file)throws IOException{Object[] state={new ArrayList<>(columns),new ArrayList<>(stock.cards),new ArrayList<>(waste.cards),new EnumMap<>(foundations)};try(ObjectOutputStream out=new ObjectOutputStream(Files.newOutputStream(file))){out.writeObject(state);}}
-    @SuppressWarnings("unchecked") void loadFrom(Path file)throws IOException,ClassNotFoundException{Object value;try(ObjectInputStream in=new ObjectInputStream(Files.newInputStream(file))){value=in.readObject();}if(!(value instanceof Object[] state)||state.length!=4)throw new IOException("Invalid Solitaire save");List<Column> loaded=(List<Column>)state[0];List<Card> loadedStock=(List<Card>)state[1],loadedWaste=(List<Card>)state[2];Map<Suit,Pile> loadedFound=(Map<Suit,Pile>)state[3];if(loaded.size()!=7||loadedFound.size()!=4)throw new IOException("Invalid Solitaire pile layout");ArrayList<Card> all=new ArrayList<>();for(Column c:loaded){if(c.visibleFrom<0||c.visibleFrom>c.cards.size())throw new IOException("Invalid visibility index");all.addAll(c.cards);}all.addAll(loadedStock);all.addAll(loadedWaste);for(Pile p:loadedFound.values())all.addAll(p.cards);Set<Card> expected=new HashSet<>();for(Suit suit:Suit.values())for(int rank=1;rank<=13;rank++)expected.add(new Card(suit,rank));if(all.size()!=52||!new HashSet<>(all).equals(expected))throw new IOException("Save must contain the standard 52 unique cards");columns.clear();columns.addAll(loaded);stock.cards.clear();stock.cards.addAll(loadedStock);waste.cards.clear();waste.cards.addAll(loadedWaste);foundations.clear();foundations.putAll(loadedFound);undo.clear();notifyChange();}
-    void save(){undo.push(snapshot());} void restore(Snapshot s){for(int i=0;i<7;i++){columns.get(i).cards.clear();columns.get(i).cards.addAll(s.columns.get(i));columns.get(i).visibleFrom=s.visible.get(i);}stock.cards.clear();stock.cards.addAll(s.stock);waste.cards.clear();waste.cards.addAll(s.waste);s.foundations.forEach((su,cs)->{foundations.get(su).cards.clear();foundations.get(su).cards.addAll(cs);});notifyChange();}
-    void draw(){if(stock.empty()){Snapshot previous=snapshot();newGame();undo.push(previous);return;}save();waste.push(stock.pop());notifyChange();}
-    Location source(Card card){if(waste.top()==card)return new Location(waste,waste.cards.size()-1,null);for(Column c:columns)for(int i=0;i<c.cards.size();i++)if(c.cards.get(i)==card&&c.visible(i))return new Location(c,i,c.sequence(i));return null;}
-    boolean isBottomKing(Card card){return card.rank==13&&columns.stream().anyMatch(c->!c.empty()&&c.cards.get(0)==card);}
-    boolean canFound(Card c){Pile p=foundations.get(c.suit);return p.empty()?c.rank==1:c.rank==p.top().rank+1;}
-    boolean canMove(Card c,Column dst){Location src=source(c);if(src==null||src.pile()==dst)return false;List<Card>seq=src.sequence()==null?List.of(c):src.sequence();return dst.accepts(seq);}
-    boolean move(Card c,Column dst,boolean foundation){Location src=source(c);if(src==null)return false;Pile p=src.pile();int i=src.index();List<Card>seq=src.sequence()==null?List.of(c):src.sequence();if(foundation){if(seq.size()!=1||!canFound(c))return false;}else if(!canMove(c,dst))return false;save();p.cards.subList(i,p.cards.size()).clear();if(p instanceof Column col){if(col.empty())col.visibleFrom=0;if(!col.empty()&&col.visibleFrom==col.cards.size())col.visibleFrom--;}if(foundation)foundations.get(c.suit).push(c);else{if(dst.empty())dst.visibleFrom=0;dst.cards.addAll(seq);}notifyChange();return true;}
-    void undo(){if(!undo.isEmpty())restore(undo.pop());}
-    boolean autoMove(){Suggestion s=strategy==null?new Suggestion("noop",null,null,false):strategy.decide(this);if(s.kind.equals("draw")){draw();return true;}if(s.kind.equals("move"))return move(s.card,s.destination,s.foundation);return false;}
-  }
-  static class Board extends JPanel {
-    final Game game; Card selected; Point press,dragPoint;
-    Board(Game g){game=g;setPreferredSize(new Dimension(940,650));setBackground(new Color(23,107,70));game.subscribe(this::repaint);addMouseListener(new MouseAdapter(){public void mousePressed(MouseEvent e){press=e.getPoint();dragPoint=null;selected=cardAt(e.getX(),e.getY());}public void mouseReleased(MouseEvent e){if(press!=null&&press.x<90&&press.y<145)game.draw();else if(selected!=null&&e.getY()<145&&e.getX()>=500){game.move(selected,null,true);}else if(selected!=null&&e.getY()>160)game.move(selected,game.columns.get(Math.max(0,Math.min(6,e.getX()/125))),false);press=null;selected=null;dragPoint=null;repaint();}});addMouseMotionListener(new MouseMotionAdapter(){public void mouseDragged(MouseEvent e){dragPoint=e.getPoint();repaint();}});}
-    Card cardAt(int x,int y){if(x>=100&&x<190&&y<145)return game.waste.top();if(y<160)return null;int j=Math.max(0,Math.min(6,x/125));Column c=game.columns.get(j);for(int i=c.cards.size()-1;i>=c.visibleFrom;i--)if(y>=170+i*25)return c.cards.get(i);return null;}
-    void card(Graphics g,int x,int y,Card c){g.setColor(c==null?new Color(36,90,66):Color.WHITE);g.fillRoundRect(x,y,76,104,8,8);g.setColor(new Color(210,225,215));g.drawRoundRect(x,y,76,104,8,8);if(c!=null){g.setColor(c.suit.red?new Color(190,35,55):Color.DARK_GRAY);g.drawString(c.toString(),x+8,y+20);}}
-    void paintDropHint(Graphics2D g){boolean legal=false;int x=0,y=170;if(dragPoint.y<145&&dragPoint.x>=500){int i=Math.max(0,Math.min(3,(dragPoint.x-500)/95));x=500+i*95;y=35;Location src=game.source(selected);legal=src!=null&&(src.sequence()==null||src.sequence().size()==1)&&game.canFound(selected);}else if(dragPoint.y>=145){int i=Math.max(0,Math.min(6,dragPoint.x/125));x=10+i*125;legal=game.canMove(selected,game.columns.get(i));}else{return;}g.setColor(legal?new Color(40,220,90):new Color(240,70,70));g.setStroke(new BasicStroke(3));g.drawRect(x,y,76,104);g.setStroke(new BasicStroke(1));}
-    protected void paintComponent(Graphics gg){super.paintComponent(gg);Graphics2D g=(Graphics2D)gg;card(g,10,35,null);g.setColor(Color.WHITE);g.drawString(game.stock.empty()?"New game":"Stock",15,155);card(g,105,35,game.waste.top());int k=0;for(Suit s:Suit.values()){card(g,500+k*95,35,game.foundations.get(s).top());g.setColor(Color.WHITE);g.drawString(s.symbol,510+k*95,30);k++;}for(int j=0;j<7;j++){Column c=game.columns.get(j);if(c.empty())card(g,10+j*125,170,null);for(int i=0;i<c.cards.size();i++)card(g,10+j*125,170+i*25,c.visible(i)?c.cards.get(i):null);}g.setColor(Color.WHITE);g.drawString("Moves: "+game.undo.size()+(game.won()?"   Victory!":""),10,625);if(selected!=null&&dragPoint!=null)paintDropHint(g);}
-  }
-  public static void main(String[]args){if(args.length>0&&args[0].equals("--smoke")){try{Game g=new Game();if(g.score()!=0||g.stock.cards.size()!=24||g.columns.stream().mapToInt(c->c.cards.size()).sum()!=28)throw new IllegalStateException("Initial deal invalid");Snapshot before=g.snapshot();g.draw();g.undo();if(!before.equals(g.snapshot()))throw new IllegalStateException("Undo did not restore state");Path saved=Files.createTempFile("solitaire-", ".save");g.draw();Snapshot position=g.snapshot();g.saveTo(saved);Game loaded=new Game();loaded.loadFrom(saved);Files.deleteIfExists(saved);if(!position.equals(loaded.snapshot()))throw new IllegalStateException("Serialization round-trip failed");for(int i=1;i<24;i++)g.draw();Snapshot old=g.snapshot();g.draw();if(g.stock.cards.size()!=24||!g.waste.empty()||g.columns.stream().mapToInt(c->c.cards.size()).sum()!=28)throw new IllegalStateException("Empty stock did not begin a new game");g.undo();if(!old.equals(g.snapshot()))throw new IllegalStateException("Undo did not restore game before reset");System.out.println("Solitaire Java model OK: initial deal, draw/undo, reset undo and identity-preserving save/load.");}catch(Exception ex){throw new RuntimeException(ex);}return;}SwingUtilities.invokeLater(()->{Game g=new Game();JFrame f=new JFrame("Solitaire — EXA871");Board b=new Board(g);JPanel bar=new JPanel();JButton draw=new JButton("Buy / New game"),undo=new JButton("Undo"),auto=new JButton("Automatic move"),save=new JButton("Save"),open=new JButton("Open");draw.addActionListener(e->g.draw());undo.addActionListener(e->g.undo());auto.addActionListener(e->g.autoMove());save.addActionListener(e->{JFileChooser c=new JFileChooser();if(c.showSaveDialog(f)==JFileChooser.APPROVE_OPTION)try{g.saveTo(c.getSelectedFile().toPath());}catch(Exception ex){JOptionPane.showMessageDialog(f,ex.toString(),"Save failed",JOptionPane.ERROR_MESSAGE);}});open.addActionListener(e->{JFileChooser c=new JFileChooser();if(c.showOpenDialog(f)==JFileChooser.APPROVE_OPTION)try{g.loadFrom(c.getSelectedFile().toPath());}catch(Exception ex){JOptionPane.showMessageDialog(f,ex.toString(),"Open failed",JOptionPane.ERROR_MESSAGE);}});bar.add(draw);bar.add(undo);bar.add(auto);bar.add(save);bar.add(open);f.add(bar,BorderLayout.NORTH);f.add(b);f.pack();f.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);f.setLocationRelativeTo(null);f.setVisible(true);});}
 }
-
-
-
-

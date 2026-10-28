@@ -3,7 +3,7 @@
 Requer Python 3.10+ com Tkinter. Pillow é opcional (PNG/JPEG e cópia de imagem): `python -m pip install pillow`.
 
 - `python main.py` abre o editor.
-- `python main.py --smoke` roda os 57 testes do modelo, regras, edição, sequência, arquivos e exportação, sem abrir janela (também: `python -m unittest discover -s tests`).
+- `python main.py --smoke` roda os 59 testes do modelo, regras, edição, sequência, arquivos e exportação, sem abrir janela (também: `python -m unittest discover -s tests`).
 - Formato de arquivo: ver `FORMATO.md`.
 
 ## Arquitetura (`jetuml/`)

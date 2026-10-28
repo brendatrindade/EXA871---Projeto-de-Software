@@ -328,7 +328,7 @@ class Editor:
             return False
         edges = [e for e in d.edges if e in chosen or (e.start in nodes and e.end in nodes)]
         ordered = [n for n in d.nodes if n in nodes]
-        self.clipboard.data = ClipData(d.kind, [self._node_dict(n) for n in ordered],
+        self.clipboard.data = ClipData(d.kind, [self._node_dict(n, nodes) for n in ordered],
                                        [{"kind": e.kind.value, "start": e.start.id, "end": e.end.id,
                                          "properties": copy.deepcopy(e.props)} for e in edges if e.start in nodes and e.end in nodes])
         self.clipboard.pastes = 0
@@ -336,8 +336,10 @@ class Editor:
         return True
 
     @staticmethod
-    def _node_dict(n: Node) -> dict:
-        return {"id": n.id, "type": n.TYPE, "x": n.x, "y": n.y, "parent": n.parent.id if n.parent else None,
+    def _node_dict(n: Node, copied: set) -> dict:
+        # Um filho copiado sem o pai vira raiz; campos mantêm o pai para a colagem ser recusada (RF25).
+        keeps_parent = n.parent is not None and (n.parent in copied or n.TYPE == "Field")
+        return {"id": n.id, "type": n.TYPE, "x": n.x, "y": n.y, "parent": n.parent.id if keeps_parent else None,
                 "properties": copy.deepcopy(n.props)}
 
     def cut_selected(self) -> None:

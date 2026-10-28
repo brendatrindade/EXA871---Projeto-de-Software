@@ -510,6 +510,28 @@ class Clipboard(unittest.TestCase):
         self.assertEqual(len(doc.diagram.nodes), 4)
 
 
+class Regressions(unittest.TestCase):
+    def test_dependency_defaults_to_dashed_style(self):
+        ws, doc = make("Class")
+        a, b = place(doc.editor, "Class", 100, 100), place(doc.editor, "Class", 400, 100)
+        doc.editor.activate_tool("Dependency")
+        drag(doc.editor, 110, 110, 410, 110)
+        edge = doc.diagram.edges[0]
+        self.assertEqual(edge.get("generalization_type"), "Implementation")
+        self.assertEqual(edge.get("directionality"), "Unidirectional")
+
+    def test_pasting_a_child_copied_without_its_package_does_not_hang(self):
+        ws, doc = make("Class")
+        pkg = place(doc.editor, "Package", 100, 100)
+        child = place(doc.editor, "Class", pkg.x + 20, pkg.y + 30)
+        doc.editor.selection = [child]
+        doc.editor.copy_selected()
+        doc.editor.paste()
+        pasted = doc.diagram.nodes[-1]
+        self.assertIsNone(pasted.parent)
+        self.assertEqual(len(doc.diagram.nodes), 3)
+
+
 class Properties(unittest.TestCase):
     def test_fields_per_type(self):
         expected = {"Class": ["name", "attributes", "methods"], "Interface": ["name", "methods"], "Package": ["name"],

@@ -1,0 +1,7 @@
+{
+  "python.analysis.extraPaths": ["jetuml/python", "solitaire/python"],
+  "pylint.args": [
+    "--init-hook=import sys; sys.path[:0] = ['jetuml/python', 'solitaire/python', README.md]",
+    "--disable=C0114,C0115,C0116,C0301,C0321,C0413,C0415,C3001"
+  ]
+}

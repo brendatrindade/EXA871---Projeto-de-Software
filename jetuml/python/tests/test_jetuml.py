@@ -5,14 +5,16 @@ import unittest
 import xml.dom.minidom
 from pathlib import Path
 
+from jetuml.java.jetuml.persistence.python.jetuml import catalog, serialization, svg
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from jetuml import catalog, serialization, svg, textfmt
-from jetuml.edges import Edge, EdgeKind as K
-from jetuml.editor import Editor, Mods
-from jetuml.errors import ValidationError
-from jetuml.settings import Settings, default_diagram_size
-from jetuml.workspace import Workspace
+from jetuml.java.jetuml.persistence.python.jetuml import textfmt
+from jetuml.java.jetuml.persistence.python.jetuml.edges import Edge, EdgeKind as K
+from jetuml.java.jetuml.persistence.python.jetuml.editor import Editor, Mods
+from jetuml.java.jetuml.persistence.python.jetuml.errors import ValidationError
+from jetuml.java.jetuml.persistence.python.jetuml.settings import Settings, default_diagram_size
+from jetuml.java.jetuml.persistence.python.jetuml.workspace import Workspace
 
 CTRL, SHIFT = Mods(ctrl=True), Mods(shift=True)
 
@@ -186,7 +188,7 @@ class Edges(unittest.TestCase):
 
     def test_edges_follow_nodes(self):
         self.connect("Association", self.a, self.b)
-        from jetuml.layout import edge_path
+        from jetuml.java.jetuml.persistence.python.jetuml.layout import edge_path
         before = edge_path(self.doc.diagram, self.doc.diagram.edges[0]).points[0]
         self.doc.editor.activate_tool("Select")
         drag(self.doc.editor, self.a.x + 10, self.a.y + 10, self.a.x + 10, self.a.y + 110)
@@ -379,7 +381,7 @@ class SequenceDiagram(unittest.TestCase):
         self.assertTrue(errors(self.ws))
 
     def test_calls_and_returns_only_between_activation_boxes(self):
-        from jetuml import rules
+        from jetuml.java.jetuml.persistence.python.jetuml import rules
         with self.assertRaises(ValidationError):
             rules.check_edge(self.doc.diagram, K.CALL, self.a, self.b)
 

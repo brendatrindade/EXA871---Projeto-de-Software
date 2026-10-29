@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import raster, serialization, svg, clipboard as system_clipboard
+from . import svg
+from . import clipboard as system_clipboard
+from . import raster
+from . import serialization
 from .diagram import Diagram
 from .editor import Clipboard, Editor
 from .errors import ValidationError

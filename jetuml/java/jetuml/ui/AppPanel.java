@@ -48,7 +48,9 @@ import jetuml.catalog.Catalog;
 import jetuml.catalog.Tool;
 import jetuml.editor.Editor;
 import jetuml.model.Diagram;
+import jetuml.model.Edge;
 import jetuml.model.Field;
+import jetuml.model.Node;
 import jetuml.model.ValidationException;
 import jetuml.text.TextFormat;
 
@@ -470,7 +472,7 @@ public final class AppPanel extends JLayeredPane implements DiagramPanel.ToolCho
   // ---------- propriedades (RF22) e View ----------
   private void editProperties(Document doc, Object element) {
     Editor editor = doc.editor;
-    String title = "Propriedades — " + (element instanceof jetuml.jetuml.model.Edge e ? e.kind.value() : ((jetuml.jetuml.model.Node) element).type());
+    String title = "Propriedades — " + (element instanceof Edge e ? e.kind.value() : ((Node) element).type());
     dialogs.open(title, Editor.fieldsFor(element), editor.valuesFor(element),
         values -> { editor.applyProperties(element, values); return true; }, List.of());
   }

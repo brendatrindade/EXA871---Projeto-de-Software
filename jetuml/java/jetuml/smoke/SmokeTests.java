@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import jetuml.geometry.Point;
 import jetuml.model.*;
 import jetuml.persistence.DiagramSerializer;
 import jetuml.persistence.Json;
+import jetuml.render.ImageExporter;
 import jetuml.render.Palette;
 import jetuml.render.SvgRenderer;
 import jetuml.rules.Rules;
@@ -253,10 +255,10 @@ public final class SmokeTests {
     test("arestas acompanham os nós", () -> {
       ClassEdges t = new ClassEdges();
       t.connect("Association", t.a, t.b);
-      Point before = jetuml.model.EdgePaths.edgePath(t.c.d(), t.c.d().edges.get(0)).points().get(0);
+      Point before = EdgePaths.edgePath(t.c.d(), t.c.d().edges.get(0)).points().get(0);
       t.c.e.activateTool("Select");
       drag(t.c.e, t.a.x + 10, t.a.y + 10, t.a.x + 10, t.a.y + 110);
-      Point after = jetuml.model.EdgePaths.edgePath(t.c.d(), t.c.d().edges.get(0)).points().get(0);
+      Point after = EdgePaths.edgePath(t.c.d(), t.c.d().edges.get(0)).points().get(0);
       check(!before.equals(after), "caminho mudou");
     });
     test("propriedades da aresta e conversão", () -> {
@@ -461,8 +463,9 @@ public final class SmokeTests {
   // ---------- seleção ----------
   private static final class Sel {
     final Ctx c = new Ctx("Class");
-    final Node a = place(c.e, "Class", 100, 100), b = place(c.e, "Class", 400, 100), cNode = place(c.e, "Class", 700, 100);
+    final Node a = place(c.e, "Class", 100, 100), b = place(c.e, "Class", 400, 100);
     Sel() {
+      place(c.e, "Class", 700, 100);
       c.e.activateTool("Association");
       drag(c.e, 110, 110, 410, 110);
       c.e.activateTool("Select");
@@ -742,7 +745,7 @@ public final class SmokeTests {
       Ctx c = new Ctx("State");
       DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new java.io.ByteArrayInputStream(
           SvgRenderer.render(c.d(), null, Palette.LIGHT, false).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
-      check(jetuml.render.ImageExporter.render(c.d()).getWidth() > 0, "imagem vazia");
+      check(ImageExporter.render(c.d()).getWidth() > 0, "imagem vazia");
     });
   }
 

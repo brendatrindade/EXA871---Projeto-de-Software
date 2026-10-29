@@ -13,6 +13,7 @@ import jetuml.model.Diagram;
 import jetuml.model.ValidationException;
 import jetuml.persistence.DiagramSerializer;
 import jetuml.render.ImageExporter;
+import jetuml.render.Palette;
 import jetuml.render.SvgRenderer;
 import jetuml.text.TextFormat;
 
@@ -108,7 +109,7 @@ public final class Workspace {
     if (format.equals("SVG")) {
       var bounds = d.contentBounds();
       Files.writeString(path, SvgRenderer.render(d, bounds == null ? null : bounds.inflated(ImageExporter.MARGIN),
-          jetuml.render.Palette.LIGHT, false));
+          Palette.LIGHT, false));
     } else {
       ImageExporter.write(ImageExporter.render(d), path, format);
     }

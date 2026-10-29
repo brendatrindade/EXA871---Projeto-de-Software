@@ -9,7 +9,9 @@ import copy
 from dataclasses import dataclass
 from typing import Callable, NamedTuple
 
-from . import catalog, rules, sequence
+from . import sequence
+from . import catalog
+from . import rules
 from .diagram import Diagram
 from .edges import Edge, EdgeKind
 from .errors import ValidationError
@@ -141,7 +143,7 @@ class Editor:
         elif category == "edge":
             self._begin_edge(x, y)
 
-    def drag(self, x: float, y: float, mods: Mods = Mods()) -> None:
+    def drag(self, x: float, y: float, _mods: Mods = Mods()) -> None:
         if self._lasso_origin is not None:
             self.lasso = normalized_rect(self._lasso_origin, Point(x, y))
         elif self._edge_start is not None:
@@ -398,8 +400,9 @@ class Editor:
 
     # ---------- propriedades (RF20, RF22–RF23) ----------
     def request_properties(self) -> None:
-        if len(self.selection) == 1 and self.fields_for(self.selection[0]) and self.on_edit_requested:
-            self.on_edit_requested(self.selection[0])
+        callback = self.on_edit_requested
+        if callback is not None and len(self.selection) == 1 and self.fields_for(self.selection[0]):
+            callback(self.selection[0])
 
     @staticmethod
     def fields_for(element):

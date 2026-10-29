@@ -20,9 +20,9 @@ def main() -> int:
     if "--smoke" in sys.argv:
         return run_smoke()
     import tkinter as tk
-    from jetuml.settings import Settings
-    from jetuml.ui.app import App
-    from jetuml.workspace import Workspace
+    from jetuml.java.jetuml.persistence.python.jetuml.settings import Settings
+    from jetuml.java.jetuml.persistence.python.jetuml.ui.app import App
+    from jetuml.java.jetuml.persistence.python.jetuml.workspace import Workspace
     root = tk.Tk()
     workspace = Workspace(Settings.load(), (root.winfo_screenwidth(), root.winfo_screenheight()))
     App(root, workspace)

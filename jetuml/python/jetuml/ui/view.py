@@ -4,7 +4,8 @@ from __future__ import annotations
 import sys
 import tkinter as tk
 
-from .. import catalog, textfmt
+from .. import textfmt
+from .. import catalog
 from ..editor import Mods
 from ..render import DARK, LIGHT, draw_diagram
 from .tk_renderer import TkRenderer

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import jetuml.model.ValidationException;
 
 /** Leitor/escritor JSON mínimo (objetos, listas, strings, números, true/false/null), formato igual ao do Python. */
 public final class Json {
@@ -25,7 +26,7 @@ public final class Json {
     try {
       return parse(text);
     } catch (IllegalArgumentException ex) {
-      throw new jetuml.jetuml.model.ValidationException(ex.getMessage());
+      throw new ValidationException(ex.getMessage());
     }
   }
 

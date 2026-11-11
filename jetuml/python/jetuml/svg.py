@@ -4,7 +4,6 @@ from __future__ import annotations
 from html import escape
 
 from . import textfmt
-from .geometry import Point
 from .render import LIGHT, OffsetRenderer, draw_diagram
 
 

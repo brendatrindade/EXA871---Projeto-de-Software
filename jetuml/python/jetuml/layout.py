@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 
 from .edges import Edge, EdgeKind
 from .geometry import Point, boundary_point, segment_distance
-from .nodes import HEADER_H, CallNode, FieldNode, ImplicitParameterNode
+from .nodes import FieldNode
 
 PARALLEL_GAP = 14
 

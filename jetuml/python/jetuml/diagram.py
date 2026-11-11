@@ -1,9 +1,9 @@
 """Modelo de um diagrama: nós (planos, com vínculo pai/filho), arestas, layout e consultas."""
 from __future__ import annotations
 
-from .edges import Edge, EdgeKind
+from .edges import Edge
 from .geometry import Rect
-from .nodes import CallNode, Node, PointNode
+from .nodes import Node, PointNode
 from . import sequence
 
 DIAGRAM_KINDS = ("Class", "Sequence", "State", "Object", "Use Case")
@@ -150,3 +150,4 @@ class Diagram:
         from .serialization import diagram_from_dict
         other = diagram_from_dict(data, validate=False)
         self.kind, self.nodes, self.edges, self._next_id = other.kind, other.nodes, other.edges, other._next_id
+    

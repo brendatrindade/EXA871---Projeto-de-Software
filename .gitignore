@@ -1,4 +1,10 @@
-*.class
-
+# Python
 __pycache__/
-*.py[cod]
+*.pyc
+# Java
+*.class
+out/
+# Editores / sistema
+.idea/
+*.log
+.DS_Store

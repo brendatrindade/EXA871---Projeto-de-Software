@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import tkinter as tk
 import tkinter.font as tkfont
-from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from .. import catalog
@@ -15,7 +14,6 @@ from .dialogs import FormDialog
 from .view import DiagramView
 
 ERROR_BG, INFO_BG = "#c62828", "#2e7d32"
-
 
 class Tooltip:
     def __init__(self, widget, text_provider) -> None:

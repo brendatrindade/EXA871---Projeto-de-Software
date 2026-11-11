@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Any
 
 from .schema import Field
 
@@ -49,18 +50,19 @@ class Edge:
     def __init__(self, kind: EdgeKind, start, end, **props) -> None:
         self.id = 0
         self.kind, self.start, self.end = kind, start, end
-        self.props = {f.name: f.default for f in self.fields()
-                      if self.kind not in _DERIVED.get(f.name, {})}      # derivadas do tipo não são armazenadas
+        self.row_y: float = 0.0
+        self.props: dict[str, Any] = {f.name: f.default for f in self.fields()
+                                     if self.kind not in _DERIVED.get(f.name, {})}      # derivadas do tipo não são armazenadas
         self.props.update(props)
 
     def fields(self) -> tuple[Field, ...]:
         return FIELDS_BY_KIND.get(self.kind, ())
 
-    def get(self, name: str):
+    def get(self, name: str) -> Any:
         derived = _DERIVED.get(name, {})
         return derived[self.kind] if self.kind in derived else self.props.get(name, "")
 
-    def set(self, name: str, value) -> None:
+    def set(self, name: str, value: Any) -> None:
         inverse = {v: k for k, v in _DERIVED.get(name, {}).items()}
         if self.kind in _DERIVED.get(name, {}):
             self.kind = inverse[value]

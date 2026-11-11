@@ -11,11 +11,27 @@ from dataclasses import dataclass
 
 from . import textfmt
 from .edges import Edge, EdgeKind as K
-from .geometry import GRID, Point, Rect
+from .geometry import GRID, Point
 from .layout import edge_path
-from .nodes import HEADER_H, ActorNode, CallNode, FieldNode, FinalStateNode, ImplicitParameterNode, InitialStateNode, \
-    InterfaceNode, Node, NoteNode, ObjectNode, PackageDescriptionNode, PackageNode, PointNode, StateNode, UseCaseNode, \
-    ClassNode
+from .nodes import (
+    HEADER_H,
+    ActorNode,
+    CallNode,
+    FieldNode,
+    FinalStateNode,
+    ImplicitParameterNode,
+    InitialStateNode,
+    InterfaceNode,
+    Node,
+    NoteNode,
+    ObjectNode,
+    PackageDescriptionNode,
+    PackageNode,
+    PointNode,
+    StateNode,
+    UseCaseNode,
+    ClassNode,
+)
 
 
 @dataclass(frozen=True)
@@ -38,17 +54,41 @@ class OffsetRenderer:
     def __init__(self, inner, dx: float, dy: float) -> None:
         self.inner, self.dx, self.dy = inner, dx, dy
 
-    def _p(self, pts): return [Point(p.x + self.dx, p.y + self.dy) for p in pts]
-    def line(self, points, color, width=1, dash=False): self.inner.line(self._p(points), color, width, dash)
-    def polygon(self, points, fill, outline, width=1): self.inner.polygon(self._p(points), fill, outline, width)
+    def _p(self, pts):
+        return [Point(p.x + self.dx, p.y + self.dy) for p in pts]
+
+    def line(self, points, color, width=1, dash=False):
+        self.inner.line(self._p(points), color, width, dash)
+
+    def polygon(self, points, fill, outline, width=1):
+        self.inner.polygon(self._p(points), fill, outline, width)
+
     def rect(self, x, y, w, h, fill, outline, width=1, radius=0, dash=False):
-        self.inner.rect(x + self.dx, y + self.dy, w, h, fill, outline, width, radius, dash)
-    def ellipse(self, x, y, w, h, fill, outline, width=1): self.inner.ellipse(x + self.dx, y + self.dy, w, h, fill, outline, width)
-    def text(self, x, y, s, color, anchor="center", bold=False, italic=False, underline=False):
-        self.inner.text(x + self.dx, y + self.dy, s, color, anchor, bold, italic, underline)
+        self.inner.rect(
+            x + self.dx, y + self.dy, w, h, fill, outline, width, radius, dash
+        )
+
+    def ellipse(self, x, y, w, h, fill, outline, width=1):
+        self.inner.ellipse(x + self.dx, y + self.dy, w, h, fill, outline, width)
+
+    def text(
+        self, x, y, s, color, anchor="center", bold=False, italic=False, underline=False
+    ):
+        self.inner.text(
+            x + self.dx, y + self.dy, s, color, anchor, bold, italic, underline
+        )
 
 
-def draw_diagram(d, r, palette: Palette = LIGHT, *, grid: bool = False, selection=(), rubber=None, lasso=None) -> None:
+def draw_diagram(
+    d,
+    r,
+    palette: Palette = LIGHT,
+    *,
+    grid: bool = False,
+    selection=(),
+    rubber=None,
+    lasso=None,
+) -> None:
     if grid:
         for x in range(0, d.size[0] + 1, GRID):
             r.line([Point(x, 0), Point(x, d.size[1])], palette.grid)
@@ -60,7 +100,15 @@ def draw_diagram(d, r, palette: Palette = LIGHT, *, grid: bool = False, selectio
         _draw_edge(d, edge, r, palette)
     for item in selection:
         if isinstance(item, Node):
-            r.rect(item.x - 3, item.y - 3, item.w + 6, item.h + 6, None, palette.selection, 2)
+            r.rect(
+                item.x - 3,
+                item.y - 3,
+                item.w + 6,
+                item.h + 6,
+                None,
+                palette.selection,
+                2,
+            )
         else:
             r.line(edge_path(d, item).points, palette.selection, 3)
     if rubber:
@@ -87,9 +135,21 @@ def _stack(r, node, groups, pal, centered_first=True, header_lines=()):
         if gi:
             r.line([Point(node.x, y), Point(node.x + node.w, y)], pal.foreground)
         for i, text in enumerate(lines):
-            cy = y + (height - len(lines) * lh) / 2 + i * lh + lh / 2 if gi == 0 else y + 5 + i * lh + lh / 2
+            cy = (
+                y + (height - len(lines) * lh) / 2 + i * lh + lh / 2
+                if gi == 0
+                else y + 5 + i * lh + lh / 2
+            )
             if gi == 0:
-                _line(r, node.x + node.w / 2, cy, text, pal.foreground, "center", bold=not text.startswith("«"))
+                _line(
+                    r,
+                    node.x + node.w / 2,
+                    cy,
+                    text,
+                    pal.foreground,
+                    "center",
+                    bold=not text.startswith("«"),
+                )
             else:
                 _line(r, node.x + 8, cy, text, pal.foreground)
         y += height
@@ -101,10 +161,24 @@ def _draw_node(n: Node, r, pal: Palette) -> None:
         return
     if isinstance(n, ClassNode):
         r.rect(n.x, n.y, n.w, n.h, fill, fg)
-        _stack(r, n, [[n.get("name")], textfmt.lines_of(n.get("attributes")), textfmt.lines_of(n.get("methods"))], pal)
+        _stack(
+            r,
+            n,
+            [
+                [n.get("name")],
+                textfmt.lines_of(n.get("attributes")),
+                textfmt.lines_of(n.get("methods")),
+            ],
+            pal,
+        )
     elif isinstance(n, InterfaceNode):
         r.rect(n.x, n.y, n.w, n.h, fill, fg)
-        _stack(r, n, [["«interface»", n.get("name")], textfmt.lines_of(n.get("methods"))], pal)
+        _stack(
+            r,
+            n,
+            [["«interface»", n.get("name")], textfmt.lines_of(n.get("methods"))],
+            pal,
+        )
     elif isinstance(n, (PackageNode, PackageDescriptionNode)):
         tab_w = min(n.w, max(60, textfmt.text_width(n.get("name")) + 20))
         r.rect(n.x, n.y, tab_w, 20, fill, fg)
@@ -114,8 +188,17 @@ def _draw_node(n: Node, r, pal: Palette) -> None:
             for i, text in enumerate(textfmt.lines_of(n.get("contents"))):
                 _line(r, n.x + 8, n.y + 30 + i * textfmt.METRICS.line_h, text, fg)
     elif isinstance(n, NoteNode):
-        r.polygon([Point(n.x, n.y), Point(n.x + n.w - 12, n.y), Point(n.x + n.w, n.y + 12),
-                   Point(n.x + n.w, n.y + n.h), Point(n.x, n.y + n.h)], pal.note_fill, fg)
+        r.polygon(
+            [
+                Point(n.x, n.y),
+                Point(n.x + n.w - 12, n.y),
+                Point(n.x + n.w, n.y + 12),
+                Point(n.x + n.w, n.y + n.h),
+                Point(n.x, n.y + n.h),
+            ],
+            pal.note_fill,
+            fg,
+        )
         for i, text in enumerate(textfmt.lines_of(n.get("text"))):
             _line(r, n.x + 8, n.y + 14 + i * textfmt.METRICS.line_h, text, fg)
     elif isinstance(n, ObjectNode):
@@ -127,8 +210,12 @@ def _draw_node(n: Node, r, pal: Palette) -> None:
     elif isinstance(n, ActorNode):
         cx, top = n.x + n.w / 2, n.y
         r.ellipse(cx - 8, top, 16, 16, fill, fg)
-        for pts in ([(cx, top + 16), (cx, top + 42)], [(cx - 14, top + 26), (cx + 14, top + 26)],
-                    [(cx, top + 42), (cx - 12, top + 58)], [(cx, top + 42), (cx + 12, top + 58)]):
+        for pts in (
+            [(cx, top + 16), (cx, top + 42)],
+            [(cx - 14, top + 26), (cx + 14, top + 26)],
+            [(cx, top + 42), (cx - 12, top + 58)],
+            [(cx, top + 42), (cx + 12, top + 58)],
+        ):
             r.line([Point(*p) for p in pts], fg)
         r.text(cx, n.y + n.h - 10, n.get("name"), fg, "center")
     elif isinstance(n, UseCaseNode):
@@ -144,13 +231,30 @@ def _draw_node(n: Node, r, pal: Palette) -> None:
         r.ellipse(n.x + 6, n.y + 6, n.w - 12, n.h - 12, fg, fg)
     elif isinstance(n, ImplicitParameterNode):
         r.rect(n.x, n.y, n.w, HEADER_H, fill, fg)
-        r.text(n.x + n.w / 2, n.y + HEADER_H / 2, n.get("name"), fg, "center", underline=True)
-        r.line([Point(n.x + n.w / 2, n.y + HEADER_H), Point(n.x + n.w / 2, n.y + n.h)], fg, 1, True)
+        r.text(
+            n.x + n.w / 2,
+            n.y + HEADER_H / 2,
+            n.get("name"),
+            fg,
+            "center",
+            underline=True,
+        )
+        r.line(
+            [Point(n.x + n.w / 2, n.y + HEADER_H), Point(n.x + n.w / 2, n.y + n.h)],
+            fg,
+            1,
+            True,
+        )
     elif isinstance(n, CallNode):
         r.rect(n.x, n.y, n.w, n.h, fill, fg)
         if n.get("open_bottom"):
             r.rect(n.x, n.y + n.h - 2, n.w, 2, fill, fill)
-            r.line([Point(n.x + n.w / 2, n.y + n.h), Point(n.x + n.w / 2, n.y + n.h + 14)], fg, 1, True)
+            r.line(
+                [Point(n.x + n.w / 2, n.y + n.h), Point(n.x + n.w / 2, n.y + n.h + 14)],
+                fg,
+                1,
+                True,
+            )
 
 
 # ---------- arestas ----------
@@ -159,7 +263,9 @@ def _unit(a: Point, b: Point):
     return (b.x - a.x) / length, (b.y - a.y) / length
 
 
-def _head(r, tip: Point, origin: Point, style: str, color: str, background: str) -> None:
+def _head(
+    r, tip: Point, origin: Point, style: str, color: str, background: str
+) -> None:
     ux, uy = _unit(origin, tip)
     px, py = -uy, ux
     size = 11
@@ -174,7 +280,11 @@ def _head(r, tip: Point, origin: Point, style: str, color: str, background: str)
         r.polygon([tip, wing1, wing2], background, color)
     elif style in ("diamond", "diamond_filled"):
         far = Point(tip.x - ux * size * 1.8, tip.y - uy * size * 1.8)
-        r.polygon([tip, wing1, far, wing2], color if style == "diamond_filled" else background, color)
+        r.polygon(
+            [tip, wing1, far, wing2],
+            color if style == "diamond_filled" else background,
+            color,
+        )
     elif style == "dot":
         r.ellipse(tip.x - 4, tip.y - 4, 8, 8, color, color)
 
@@ -185,24 +295,49 @@ def _edge_style(e: Edge):
     direction = e.props.get("directionality", "")
     both = direction == "Bidirectional"
     if k in (K.INHERITANCE, K.REALIZATION):
-        return e.get("generalization_type") == "Implementation", "open" if both else None, "triangle", None
+        return (
+            e.get("generalization_type") == "Implementation",
+            "open" if both else None,
+            "triangle",
+            None,
+        )
     if k is K.DEPENDENCY:
-        return e.get("generalization_type") == "Implementation", "open" if both else None, "open", None
+        return (
+            e.get("generalization_type") == "Implementation",
+            "open" if both else None,
+            "open",
+            None,
+        )
     if k is K.ASSOCIATION:
-        return False, "open" if both else None, "open" if direction in ("Unidirectional", "Bidirectional") else None, None
+        return (
+            False,
+            "open" if both else None,
+            "open" if direction in ("Unidirectional", "Bidirectional") else None,
+            None,
+        )
     if k in (K.AGGREGATION, K.COMPOSITION):
         start = "diamond" if k is K.AGGREGATION else "diamond_filled"
-        return False, start, "open" if direction in ("Unidirectional", "Bidirectional") else None, None
+        return (
+            False,
+            start,
+            "open" if direction in ("Unidirectional", "Bidirectional") else None,
+            None,
+        )
     if k is K.GENERALIZATION:
         return False, None, "triangle", None
     if k is K.USE_CASE_DEPENDENCY:
         t = e.get("dependency_type")
         return True, None, "open", {"Include": "«include»", "Extend": "«extend»"}.get(t)
-    if k is K.CALL: return False, None, "filled", None
-    if k is K.RETURN: return True, None, "open", None
-    if k is K.TRANSITION: return False, None, "filled", None
-    if k is K.REFERENCE: return False, "dot", "filled", None
-    if k is K.NOTE_CONNECTOR: return True, None, None, None
+    if k is K.CALL:
+        return False, None, "filled", None
+    if k is K.RETURN:
+        return True, None, "open", None
+    if k is K.TRANSITION:
+        return False, None, "filled", None
+    if k is K.REFERENCE:
+        return False, "dot", "filled", None
+    if k is K.NOTE_CONNECTOR:
+        return True, None, None, None
     return False, None, None, None
 
 
@@ -220,6 +355,9 @@ def _draw_edge(d, e: Edge, r, pal: Palette) -> None:
     middle = fixed or e.props.get("middle_label", "")
     if middle:
         _line(r, mid.x, mid.y - 9, middle, fg, "center")
-    for key, anchor in (("start_label", path.start_label), ("end_label", path.end_label)):
+    for key, anchor in (
+        ("start_label", path.start_label),
+        ("end_label", path.end_label),
+    ):
         if e.props.get(key):
             _line(r, anchor.x, anchor.y, e.props[key], fg, "center")

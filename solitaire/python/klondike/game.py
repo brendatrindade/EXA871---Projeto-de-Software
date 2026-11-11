@@ -98,7 +98,9 @@ class Game:
         return (location is not None and isinstance(location.pile, TableauColumn)
                 and location.index == location.pile.hidden_count)
 
-    def is_king_at_base(self, card: Card) -> bool:
+    def is_king_at_base(self, card: Card | None) -> bool:
+        if card is None:
+            return False
         location = self.locate(card)
         return (location is not None and card.rank is Rank.KING
                 and isinstance(location.pile, TableauColumn) and location.index == 0)

@@ -95,7 +95,7 @@ class Diagram:
                 return edge
         return None
 
-    def content_bounds(self) -> Rect | None:
+    def content_bounds(self) -> Rect:
         from .layout import edge_path
         rects = [n.bounds for n in self.nodes if n.SELECTABLE or n.parent is None]
         for e in self.edges:
@@ -103,7 +103,7 @@ class Diagram:
             xs, ys = [p.x for p in pts], [p.y for p in pts]
             rects.append(Rect(min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)))
         if not rects:
-            return None
+            return Rect(0, 0, 0, 0)
         result = rects[0]
         for r in rects[1:]:
             result = result.union(r)

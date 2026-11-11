@@ -1,6 +1,8 @@
 """Nós dos cinco tipos de diagrama. Cada tipo conhece seus campos, tamanho e filhos aceitos."""
 from __future__ import annotations
 
+from typing import Any
+
 from .geometry import Rect
 from .schema import Field
 from . import textfmt
@@ -23,14 +25,14 @@ class Node:
         self.w, self.h = self.MIN_W, self.MIN_H
         self.parent: Node | None = None
         self.children: list[Node] = []
-        self.props = {f.name: f.default for f in self.FIELDS}
+        self.props: dict[str, Any] = {f.name: f.default for f in self.FIELDS}
         self.props.update(props)
 
     @property
     def bounds(self) -> Rect: return Rect(self.x, self.y, self.w, self.h)
 
-    def get(self, name: str): return self.props[name]
-    def set(self, name: str, value) -> None: self.props[name] = value
+    def get(self, name: str) -> Any: return self.props[name]
+    def set(self, name: str, value: Any) -> None: self.props[name] = value
 
     def accepts(self, node: "Node") -> bool: return node.TYPE in self.ACCEPTS
     def fit(self) -> None: """Recalcula w/h a partir das propriedades."""

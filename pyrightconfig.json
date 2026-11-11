@@ -1,0 +1,10 @@
+{
+  "include": [
+    "solitaire/python",
+    "jetuml/python"
+  ],
+  "extraPaths": [
+    "solitaire/python",
+    "jetuml/python"
+  ]
+}

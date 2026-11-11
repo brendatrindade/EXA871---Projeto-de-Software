@@ -9,8 +9,7 @@ from klondike import geometry, persistence
 from klondike.actions import DrawAction, NewGameAction, NullAction
 from klondike.cards import Card, Deck, Rank, Suit
 from klondike.game import Game, Layout
-from klondike.strategy import AutomaticStrategy, NullStrategy
-
+from klondike.strategy import NullStrategy
 
 def card(suit, rank):
     return Card(Suit[suit], Rank(rank))
@@ -20,7 +19,9 @@ def layout(columns=(), stock=(), waste=(), foundations=None):
     cols = [(list(c), h) for c, h in columns]
     cols += [([], 0)] * (7 - len(cols))
     found = foundations or {}
-    return Layout(cols, list(stock), list(waste), {s: list(found.get(s, [])) for s in Suit})
+    return Layout(
+        cols, list(stock), list(waste), {s: list(found.get(s, [])) for s in Suit}
+    )
 
 
 class DealAndCards(unittest.TestCase):
@@ -44,7 +45,9 @@ class DealAndCards(unittest.TestCase):
         self.assertEqual(len(Deck()), 52)
 
     def test_shuffle_differs_between_seeds(self):
-        self.assertNotEqual([str(c) for c in Game(1).stock.cards], [str(c) for c in Game(2).stock.cards])
+        self.assertNotEqual(
+            [str(c) for c in Game(1).stock.cards], [str(c) for c in Game(2).stock.cards]
+        )
 
 
 class Rules(unittest.TestCase):
@@ -62,11 +65,15 @@ class Rules(unittest.TestCase):
 
     def test_column_rules_and_waste_not_destination(self):
         g = Game(1)
-        g.load_layout(layout(columns=[([card("SPADES", 7)], 0), ([], 0)], waste=[card("HEARTS", 6)]))
+        g.load_layout(
+            layout(
+                columns=[([card("SPADES", 7)], 0), ([], 0)], waste=[card("HEARTS", 6)]
+            )
+        )
         six = card("HEARTS", 6)
         g.waste.replace([six])
         self.assertTrue(g.can_move(six, g.columns[0]))
-        self.assertFalse(g.can_move(six, g.columns[1]))       # coluna vazia só aceita Rei
+        self.assertFalse(g.can_move(six, g.columns[1]))  # coluna vazia só aceita Rei
         self.assertFalse(g.can_move(six, g.waste))
         self.assertFalse(g.can_move(six, g.stock))
 
@@ -77,14 +84,19 @@ class Rules(unittest.TestCase):
         self.assertTrue(g.can_move(ace, g.foundations[Suit.HEARTS]))
         self.assertTrue(g.move(ace, g.foundations[Suit.HEARTS]))
         self.assertEqual(g.score, 1)
-        self.assertTrue(g.columns[0].is_visible(0))           # revelação automática
+        self.assertTrue(g.columns[0].is_visible(0))  # revelação automática
         g.undo()
         self.assertEqual(g.columns[0].hidden_count, 1)
         self.assertIs(g.columns[0].top(), ace)
 
     def test_sequence_moves_together_and_foundation_takes_one(self):
         g = Game(1)
-        h8, s7, h6, s9 = card("HEARTS", 8), card("SPADES", 7), card("HEARTS", 6), card("SPADES", 9)
+        h8, s7, h6, s9 = (
+            card("HEARTS", 8),
+            card("SPADES", 7),
+            card("HEARTS", 6),
+            card("SPADES", 9),
+        )
         g.load_layout(layout(columns=[([card("CLUBS", 3), h8, s7, h6], 1), ([s9], 0)]))
         self.assertEqual(g.sequence_from(h8), (h8, s7, h6))
         self.assertFalse(g.can_move(h8, g.foundations[Suit.HEARTS]))
@@ -103,14 +115,25 @@ class Rules(unittest.TestCase):
         g = Game(3)
         before = g.capture()
         for c in g.all_cards():
-            g.locate(c); g.sequence_from(c); g.is_visible(c); g.is_first_visible(c)
-            g.is_king_at_base(c); g.can_move(c, g.columns[0])
+            g.locate(c)
+            g.sequence_from(c)
+            g.is_visible(c)
+            g.is_first_visible(c)
+            g.is_king_at_base(c)
+            g.can_move(c, g.columns[0])
         self.assertEqual(before, g.capture())
 
     def test_king_at_base_query(self):
         g = Game(1)
         king = card("HEARTS", 13)
-        g.load_layout(layout(columns=[([king], 0), ([card("CLUBS", 2), king.__class__(Suit.SPADES, Rank.KING)], 1)]))
+        g.load_layout(
+            layout(
+                columns=[
+                    ([king], 0),
+                    ([card("CLUBS", 2), king.__class__(Suit.SPADES, Rank.KING)], 1),
+                ]
+            )
+        )
         self.assertTrue(g.is_king_at_base(king))
         self.assertFalse(g.is_king_at_base(g.columns[1].top()))
 
@@ -130,7 +153,9 @@ class HistoryAndActions(unittest.TestCase):
 
     def test_empty_stock_starts_new_game_and_is_undoable(self):
         g = Game(1)
-        g.load_layout(layout(columns=[([card("SPADES", 5)], 0)], waste=[card("HEARTS", 2)]))
+        g.load_layout(
+            layout(columns=[([card("SPADES", 5)], 0)], waste=[card("HEARTS", 2)])
+        )
         before = g.capture()
         self.assertIsInstance(g.plan_draw(), NewGameAction)
         self.assertTrue(g.draw())
@@ -143,7 +168,7 @@ class HistoryAndActions(unittest.TestCase):
         g = Game(1)
         before = g.capture()
         self.assertFalse(g.perform(NullAction()))
-        self.assertFalse(g.perform(NewGameAction()))          # monte não está vazio
+        self.assertFalse(g.perform(NewGameAction()))  # monte não está vazio
         self.assertEqual(g.history_size, 0)
         self.assertEqual(before, g.capture())
 
@@ -159,7 +184,7 @@ class HistoryAndActions(unittest.TestCase):
             while g.undo():
                 pass
             self.assertEqual(g.capture(), initial)
-            self.assertTrue(g.automatic_move())               # continua jogável
+            self.assertTrue(g.automatic_move())  # continua jogável
 
 
 class AutomaticPlay(unittest.TestCase):
@@ -173,14 +198,24 @@ class AutomaticPlay(unittest.TestCase):
     def test_priority_waste_to_foundation_over_tableau(self):
         g = Game(1)
         ace = card("HEARTS", 1)
-        g.load_layout(layout(columns=[([card("SPADES", 2)], 0)], stock=[card("CLUBS", 9)], waste=[ace]))
+        g.load_layout(
+            layout(
+                columns=[([card("SPADES", 2)], 0)],
+                stock=[card("CLUBS", 9)],
+                waste=[ace],
+            )
+        )
         self.assertTrue(g.automatic_move())
         self.assertIs(g.foundations[Suit.HEARTS].top(), ace)
 
     def test_priority_column_to_foundation_before_tableau_move(self):
         g = Game(1)
         ace = card("HEARTS", 1)
-        g.load_layout(layout(columns=[([ace], 0)], stock=[card("CLUBS", 9)], waste=[card("CLUBS", 4)]))
+        g.load_layout(
+            layout(
+                columns=[([ace], 0)], stock=[card("CLUBS", 9)], waste=[card("CLUBS", 4)]
+            )
+        )
         self.assertTrue(g.automatic_move())
         self.assertIs(g.foundations[Suit.HEARTS].top(), ace)
 
@@ -206,7 +241,9 @@ class Persistence(unittest.TestCase):
         other.load_layout(persistence.loads(text))
         self.assertEqual(persistence.dumps(other), text)
         self.assertEqual(len({id(c) for c in other.all_cards()}), 52)
-        self.assertEqual([str(c) for c in g.waste.cards], [str(c) for c in other.waste.cards])
+        self.assertEqual(
+            [str(c) for c in g.waste.cards], [str(c) for c in other.waste.cards]
+        )
         self.assertEqual(other.history_size, 0)
 
     def test_legacy_visible_from_is_accepted(self):
@@ -215,9 +252,12 @@ class Persistence(unittest.TestCase):
 
     def test_invalid_files_are_rejected(self):
         data = json.loads(persistence.dumps(Game(2)))
-        broken = json.loads(json.dumps(data)); broken["stock"].pop()
-        dup = json.loads(json.dumps(data)); dup["stock"][0] = dup["stock"][1]
-        wrong = json.loads(json.dumps(data)); wrong["schema"] = "x"
+        broken = json.loads(json.dumps(data))
+        broken["stock"].pop()
+        dup = json.loads(json.dumps(data))
+        dup["stock"][0] = dup["stock"][1]
+        wrong = json.loads(json.dumps(data))
+        wrong["schema"] = "x"
         for bad in (broken, dup, wrong, {}, []):
             with self.assertRaises(ValueError):
                 persistence.loads(json.dumps(bad))

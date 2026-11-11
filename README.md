@@ -21,5 +21,5 @@ Os quatro projetos seguem a mesma divisão em camadas: modelo e regras independe
 
 ## Testes
 
-Cada projeto traz seu conjunto de testes (`--smoke`): Solitaire 23 (Python) e 22 (Java);    
+Cada projeto traz seu conjunto de testes (`--smoke`): Solitaire 23 (Python) e 22 (Java);
 JetUML 59 (Python) e 60 (Java)

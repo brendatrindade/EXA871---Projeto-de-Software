@@ -50,7 +50,7 @@ class Edge:
     def __init__(self, kind: EdgeKind, start, end, **props) -> None:
         self.id = 0
         self.kind, self.start, self.end = kind, start, end
-        self.row_y: float = 0.0
+        self.row_y: float | None = None   # preenchido pelo layout de sequência (RF17)
         self.props: dict[str, Any] = {f.name: f.default for f in self.fields()
                                      if self.kind not in _DERIVED.get(f.name, {})}      # derivadas do tipo não são armazenadas
         self.props.update(props)

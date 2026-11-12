@@ -23,6 +23,7 @@ import klondike.piles.TableauColumn;
 
 /** Desenha o tabuleiro e traduz o mouse em jogadas. Não contém regras: consulta {@link Game#canMove}. */
 final class BoardPanel extends JPanel {
+  private static final long serialVersionUID = 1L;
   private static final Color FELT = new Color(23, 107, 70), SLOT = new Color(183, 215, 198);
   private static final Font CARD_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 14);
 
@@ -39,8 +40,8 @@ final class BoardPanel extends JPanel {
     }
   }
 
-  private final Game game;
-  private Drag drag;
+  private final transient Game game;
+  private transient Drag drag;
   private int pressX = -1, pressY = -1;
 
   BoardPanel(Game game) {

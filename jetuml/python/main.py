@@ -8,7 +8,7 @@ sys.path.insert(0, str(HERE))
 
 
 def run_smoke() -> int:
-    suite = unittest.defaultTestLoader.discover(str(HERE / "tests"), pattern="test_*.py")
+    suite = unittest.defaultTestLoader.discover(str(HERE / "tests"), top_level_dir=str(HERE))
     result = unittest.TextTestRunner(verbosity=1).run(suite)
     if result.wasSuccessful():
         print(f"JetUML Python OK: {result.testsRun} testes de modelo, regras, edição, sequência, arquivos e exportação.")

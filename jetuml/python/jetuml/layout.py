@@ -70,7 +70,7 @@ def _reference(edge: Edge) -> list[Point]:
 
 
 def _sequence_points(edge: Edge) -> list[Point]:
-    row = getattr(edge, "row_y", edge.start.y + 10)
+    row = edge.row_y if edge.row_y is not None else edge.start.y + 10
     s, t = edge.start, edge.end
     if edge.kind is EdgeKind.CALL:
         caller, callee = s, t

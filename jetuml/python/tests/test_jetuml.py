@@ -641,6 +641,35 @@ class Regressions(unittest.TestCase):
         self.assertEqual(len(doc.diagram.nodes), 3)
 
 
+class EmptyDiagramAndRowY(unittest.TestCase):
+    def test_empty_diagram_has_no_content_bounds_and_exports_default_size(self):
+        ws, doc = make("State")
+        self.assertIsNone(doc.diagram.content_bounds())
+        root = xml.dom.minidom.parseString(svg.render_svg(doc.diagram)).documentElement
+        self.assertEqual(root.getAttribute("width"), str(doc.diagram.size[0]))      # SVG sem recorte: tamanho do diagrama
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "v.svg"
+            ws.export_image(doc, path)
+            self.assertIn(f'width="{doc.diagram.size[0]}"', path.read_text(encoding="utf-8"))
+        try:
+            from jetuml import raster
+        except ImportError:
+            return
+        try:
+            self.assertEqual(raster.render_image(doc.diagram).size, (120, 60))       # imagem mínima, como no Java
+        except raster.MissingDependency:
+            pass
+
+    def test_row_y_is_none_until_sequence_layout_runs(self):
+        from jetuml.edges import Edge
+        ws, doc = make("Sequence")
+        a, b = place(doc.editor, "Implicit Parameter", 50, 20), place(doc.editor, "Implicit Parameter", 250, 20)
+        self.assertIsNone(Edge(K.CALL, a, b).row_y)
+        doc.editor.activate_tool("Call")
+        drag(doc.editor, a.x + 40, 100, b.x + 40, 100)
+        self.assertIsNotNone(doc.diagram.edges[0].row_y)
+
+
 class Properties(unittest.TestCase):
     def test_fields_per_type(self):
         expected = {
@@ -795,7 +824,9 @@ class Export(unittest.TestCase):
         ws = Workspace()
         doc = ws.new_document("Class")
         place(doc.editor, "Class", 300, 300)
-        text = svg.render_svg(doc.diagram, doc.diagram.content_bounds().inflated(10))
+        bounds = doc.diagram.content_bounds()
+        assert bounds is not None
+        text = svg.render_svg(doc.diagram, bounds.inflated(10))
         self.assertNotIn("#e6e6e6", text)
         document = xml.dom.minidom.parseString(text)
         element = document.documentElement

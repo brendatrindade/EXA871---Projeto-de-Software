@@ -23,7 +23,8 @@ import klondike.strategy.AutomaticStrategy;
 
 /** Janela principal: barra de botões e tabuleiro. */
 public final class SolitaireWindow extends JFrame {
-  private final Game game;
+  private static final long serialVersionUID = 1L;
+  private final transient Game game;
 
   public SolitaireWindow(Game game) {
     super("Solitaire — EXA871");

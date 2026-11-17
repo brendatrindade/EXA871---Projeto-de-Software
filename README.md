@@ -1,3 +1,8 @@
+### Relatório 
+**O relatório pode ser acessado [clicando aqui](https://docs.google.com/document/d/1wDaTBDx9mSFQPxzGfzHFsY1mIDY33OBS_00c3Y9kx8Q/edit?usp=sharing)**
+
+---
+
 Implementações de **Solitaire** e **JetUML (editor de diagramas UML)** em **Java** e **Python**, para comparação com os softwares de referência
 
 | Projeto | Python 3.10+ (Tkinter) | Java 17+ (Swing) |
